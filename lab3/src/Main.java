@@ -88,7 +88,7 @@ public class Main {
         for (EducationalInstitution institution : institutions) {
             System.out.println(institution);
         }
-        
+
         EducationalInstitution target = new EducationalInstitution("Academy D", "City X", 2005, 12000, 4.3);
         int index = Arrays.asList(institutions).indexOf(target);
 
