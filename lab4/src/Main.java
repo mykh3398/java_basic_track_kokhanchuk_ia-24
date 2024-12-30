@@ -1,17 +1,28 @@
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
- * Клас, який представляє літеру.
+ * Represents a single character in a word.
+ * <p>
+ * This class encapsulates a character value and provides a method to retrieve it.
+ * It is used as a building block for the Word class, allowing more structured handling
+ * of individual letters.
  */
 class Letter {
     private char value;
-
+    /**
+     * Constructs a Letter object with the specified character value.
+     *
+     * @param value the character value of the letter
+     */
     public Letter(char value) {
         this.value = value;
     }
-
+    /**
+     * Returns the character value of the letter.
+     *
+     * @return the character value
+     */
     public char getValue() {
         return value;
     }
@@ -22,18 +33,21 @@ class Letter {
     }
 }
 
+
 /**
- * Клас, який представляє розділовий знак.
+ * Represents a punctuation mark in a sentence.
+ * <p>
+ * This class encapsulates a punctuation symbol and provides methods to retrieve its value.
  */
 class Punctuation {
     private char symbol;
-
+    /**
+     * Constructs a Punctuation object with the specified symbol.
+     *
+     * @param symbol the punctuation symbol
+     */
     public Punctuation(char symbol) {
         this.symbol = symbol;
-    }
-
-    public char getSymbol() {
-        return symbol;
     }
 
     @Override
@@ -43,11 +57,18 @@ class Punctuation {
 }
 
 /**
- * Клас, який представляє слово, що складається з масиву літер.
+ * Represents a word composed of multiple letters.
+ * <p>
+ * This class manages a list of Letter objects to form a word and provides methods
+ * to analyze the word, such as counting vowels.
  */
 class Word {
     private List<Letter> letters;
-
+    /**
+     * Constructs a Word object from the given string.
+     *
+     * @param word the string representation of the word
+     */
     public Word(String word) {
         letters = new ArrayList<>();
         for (char c : word.toCharArray()) {
@@ -55,10 +76,11 @@ class Word {
         }
     }
 
-    public List<Letter> getLetters() {
-        return letters;
-    }
-
+    /**
+     * Counts the number of vowels in the word.
+     *
+     * @return the count of vowels in the word
+     */
     public int countVowels() {
         String vowels = "AEIOUaeiou";
         int count = 0;
@@ -81,57 +103,73 @@ class Word {
 }
 
 /**
- * Клас, який представляє речення, що складається з масиву слів та розділових знаків.
+ * Represents a sentence composed of words and punctuation marks.
+ * <p>
+ * This class organizes words and punctuation into a coherent structure and
+ * provides methods to access and format the sentence.
  */
 class Sentence {
-    private List<Word> words;
-    private List<Punctuation> punctuations;
-
+    private List<Object> elements;
+    /**
+     * Constructs a Sentence object by parsing a given string.
+     *
+     * @param sentence the string representation of the sentence
+     */
     public Sentence(String sentence) {
-        words = new ArrayList<>();
-        punctuations = new ArrayList<>();
-
+        elements = new ArrayList<>();
         String[] splitParts = sentence.split("(?=[,.!?])|(?<=[,.!?])|\s+");
         for (String part : splitParts) {
-            if (part.matches("[,.!?]") && !part.isEmpty()) {
-                punctuations.add(new Punctuation(part.charAt(0)));
+            if (part.matches("[,.!?]")) {
+                elements.add(new Punctuation(part.charAt(0)));
             } else if (!part.isBlank()) {
-                words.add(new Word(part));
+                elements.add(new Word(part));
             }
         }
     }
-
-    public List<Word> getWords() {
-        return words;
+    /**
+     * Returns the list of words in the sentence.
+     *
+     * @return the list of Word objects
+     */
+    public List<Object> getElements() {
+        return elements;
     }
 
     @Override
     public String toString() {
         StringBuilder sentence = new StringBuilder();
-        int wordIndex = 0;
-        int punctIndex = 0;
+        boolean lastWasWord = false;
 
-        while (wordIndex < words.size() || punctIndex < punctuations.size()) {
-            if (wordIndex < words.size()) {
-                sentence.append(words.get(wordIndex++));
-            }
-            if (punctIndex < punctuations.size()) {
-                sentence.append(punctuations.get(punctIndex++));
-            }
-            if (wordIndex < words.size() && punctIndex < punctuations.size()) {
-                sentence.append(" ");
+        for (Object element : elements) {
+            if (element instanceof Word) {
+                if (lastWasWord) {
+                    sentence.append(" ");
+                }
+                sentence.append(element);
+                lastWasWord = true;
+            } else if (element instanceof Punctuation) {
+                sentence.append(element);
+                lastWasWord = false;
             }
         }
         return sentence.toString();
     }
+
 }
 
 /**
- * Клас, який представляє текст, що складається з масиву речень.
+ * Represents a text composed of multiple sentences.
+ * <p>
+ * This class provides functionality for organizing and manipulating sentences,
+ * including methods for text transformation and word analysis.
  */
 class Text {
     private List<Sentence> sentences;
-
+    /**
+     * Constructs a Text object by parsing a given string into sentences.
+     *
+     * @param text the string representation of the text
+     */
     public Text(String text) {
         sentences = new ArrayList<>();
         text = text.replaceAll("\\s+", " ");
@@ -142,15 +180,19 @@ class Text {
             }
         }
     }
-
-    public List<Sentence> getSentences() {
-        return sentences;
-    }
-
+    /**
+     * Sorts all words in the text by their vowel count and returns a concatenated string of sorted words.
+     *
+     * @return a string of words sorted by the number of vowels
+     */
     public String sortWordsByVowelCount() {
         List<Word> allWords = new ArrayList<>();
         for (Sentence sentence : sentences) {
-            allWords.addAll(sentence.getWords());
+            for (Object element : sentence.getElements()) {
+                if (element instanceof Word) {
+                    allWords.add((Word) element);
+                }
+            }
         }
         allWords.sort((w1, w2) -> Integer.compare(w1.countVowels(), w2.countVowels()));
 
@@ -164,29 +206,31 @@ class Text {
     @Override
     public String toString() {
         StringBuilder text = new StringBuilder();
-        for (Sentence sentence : sentences) {
-            text.append(sentence).append(" ");
+        for (int i = 0; i < sentences.size(); i++) {
+            text.append(sentences.get(i));
+            if (i < sentences.size() - 1) {
+                text.append(" ");
+            }
         }
         return text.toString().trim();
     }
+
 }
 
+/**
+ * Entry point of the application to demonstrate the Text processing.
+ */
 public class Main {
     public static void main(String[] args) {
-        // Вихідний текст
-        String inputText = "This is a test text. It includes, multiple sentences, words and punctuation marks.";
+        String inputText = "This is a test text. It includes multiple sentences, words and punctuation marks.";
 
-        // Створення тексту
         Text text = new Text(inputText);
 
-        // Виведення початкового тексту
         System.out.println("Початковий текст:");
         System.out.println(text);
 
-        // Сортування слів за кількістю голосних
         String sortedWords = text.sortWordsByVowelCount();
 
-        // Виведення результату сортування
         System.out.println("\nСлова, відсортовані за кількістю голосних:");
         System.out.println(sortedWords);
     }
